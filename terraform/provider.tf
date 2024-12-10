@@ -3,7 +3,7 @@ terraform {
     bucket         = "celibrus-terraform-state" # Replace with your bucket name
     key            = "terraform-state/terraform.tfstate" # Customize this key structure if needed
     region         = "us-east-1" # Replace with your region
-    dynamodb_table = "arn:aws:dynamodb:us-east-1:0116240067256:table/Dynamodb-celibrus-terraform" # Replace with your DynamoDB table name
+    dynamodb_table = "Dynamodb-celibrus-terraform" # Replace with your DynamoDB table name
     encrypt        = true
   }
   required_providers {
