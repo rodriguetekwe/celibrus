@@ -1,0 +1,62 @@
+name: Deploy Website to Multi-Account S3
+
+on:
+  push:
+    branches:
+      - master
+
+permissions:
+  id-token: write
+  contents: read
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        account_id:
+          - "011624006725"  # Account 1 ID
+          # - "043433929958"  # Account 2 ID
+      fail-fast: false  # Optional: Ensure all jobs run even if one fails
+      max-parallel: 1
+    steps:
+      # Step 1: Checkout the code
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      # Step 2: Set Role ARN based on Account ID and Configure AWS Credentials
+      - name: Set Role ARN and Configure AWS Credentials
+        run: |
+          # Dynamically generate role name based on the account ID
+          ROLE_ARN="arn:aws:iam::${{ matrix.account_id }}:role/GitHubOIDCRole"
+          echo "ROLE_ARN=$ROLE_ARN" >> $GITHUB_ENV
+          
+      # Step 3: Assume IAM Role and Configure AWS Credentials
+      - name: Assume IAM Role and Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          role-to-assume: ${{ env.ROLE_ARN }}
+          aws-region: us-east-1
+
+      # Step 4: Terraform Init and Apply
+      - name: Terraform Init
+        run: terraform init
+        working-directory: ./terraform
+      
+      - name: Select or Create Workspace
+        run: |
+          terraform workspace select "${{ matrix.account_id }}" || terraform workspace new "${{ matrix.account_id }}"
+        working-directory: ./terraform
+
+      - name: Terraform Apply
+        run: terraform apply -auto-approve
+        working-directory: ./terraform
+        env: 
+          TF_VAR_bucket_name: "my-website-bucket-${{ matrix.account_id }}"
+
+      # Step 5: Deploy Website Files to S3
+      - name: export code to s3
+        run: aws s3 sync ./app s3://$BUCKET_NAME
+        env:
+          BUCKET_NAME: "my-website-bucket-${{ matrix.account_id }}"
+          AWS_EC2_METADATA_DISABLED: true
+      
