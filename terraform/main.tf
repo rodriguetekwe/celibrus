@@ -12,6 +12,16 @@ module "s3_bucket" {
     error_document = "error.html"
   }
 
+  cors_rule = [
+    {
+    allowed_headers = ["*"]
+    allowed_methods = ["PUT", "POST"]
+    allowed_origins = ["https://s3-website-test.hashicorp.com"]
+    expose_headers  = ["ETag"]
+    max_age_seconds = 3000
+  }
+  ]
+
   attach_policy  = true
   policy = jsonencode({
     Version = "2012-10-17"
