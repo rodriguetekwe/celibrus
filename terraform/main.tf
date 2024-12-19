@@ -2,7 +2,7 @@
 module "s3_bucket" {
   source  = "terraform-aws-modules/s3-bucket/aws"
   bucket = var.bucket_name
-  block_public_policy = true
+  block_public_policy = false
   block_public_acls = false
   restrict_public_buckets= false
   ignore_public_acls  = false
